@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from environs import Env
+
+env = Env()
+env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -127,3 +131,20 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
+
+# Google SMPT
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+"""
+email = env.dj_email_url("EMAIL_URL", default="smpt://")
+EMAIL_HOST = email["EMAIL_HOST"]
+EMAIL_HOST_USER = email["EMAIL_HOST_USER"]
+EMAIL_HOST_PASSWORD = email["EMAIL_HOST_PASSWORD"]
+EMAIL_PORT = email["EMAIL_PORT"]
+EMAIL_USE_TLS = email["EMAIL_USE_TLS"]
+"""
