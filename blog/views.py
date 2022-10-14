@@ -3,11 +3,17 @@ from .models import Post
 from django.http import Http404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
-from .forms import EmailPostForm, CommentForm
+from .forms import EmailPostForm, CommentForm, SearchForm
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
 from taggit.models import Tag
 from django.db.models import Count
+from django.contrib.postgres.search import (
+    SearchVector,
+    SearchQuery,
+    SearchRank,
+    TrigramSimilarity,
+)
 
 
 def post_share(request, post_id):
@@ -123,3 +129,62 @@ def post_comment(request, post_id):
         "blog/post/comment.html",
         {"post": post, "form": form, "comment": comment},
     )
+
+
+def post_search(request):
+    query = None
+    form = SearchForm()
+    results = []
+    if "query" in request.GET:
+        form = SearchForm(request.GET)  # !
+        if form.is_valid():
+            query = form.cleaned_data["query"]
+            results = Post.published.annotate(similarity=TrigramSimilarity("title", query)) \
+                .filter(similarity__gt=0.1) \
+                .order_by("-similarity")
+            
+
+    return render(
+        request,
+        "blog/post/search.html",
+        {"form": form, "query": query, "results": results},
+    )
+
+
+"""
+# По ранжированию
+        form = SearchForm(request.GET)  # !
+        if form.is_valid():
+            query = form.cleaned_data["query"]
+            search_vector = SearchVector("title", "body", config="russian")
+            search_query = SearchQuery(query, config="russian")
+            results = Post.published.annotate(
+                search=search_vector,
+                rank=SearchRank(search_vector, search_query)
+            ).filter(search=search_query).order_by("-rank")
+
+# По весу
+        if form.is_valid():
+            query = form.cleaned_data["query"]
+            search_vector = SearchVector("title", config="russian", weight="A") \
+                + SearchVector("body", config="russian", weight="B")
+            search_query = SearchQuery(query, config="russian")
+            results = Post.published.annotate(
+                search=search_vector,
+                rank=SearchRank(search_vector, search_query)
+            ).filter(rank__gte=0.3).order_by("-rank")
+
+# Triagram Similarity
+        if "query" in request.GET:
+            form = SearchForm(request.GET)  # !
+            if form.is_valid():
+                query = form.cleaned_data["query"]
+                results = Post.published.annotate(similarity=TrigramSimilarity("title", query)) \
+                    .filter(similarity__gt=0.1) \
+                    .order_by("-similarity")
+
+
+
+        
+        
+"""
