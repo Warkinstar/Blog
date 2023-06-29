@@ -20,6 +20,18 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+* Создайте .env файл для переменных окружения для smpt и postgresql:
+```env
+EMAIL_HOST_USER = "Your_email_smpt"
+EMAIL_HOST_PASSWORD = "Your_password_for_smpt"
+POSTGRESQL_BLOG_PASSWORD = "1243314319"
+```
+
+* Можете расскоментировать в educa/settings.py, чтобы использовать вывод smpt сообщений в консоль
+```python
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+```
+
 * Проведите миграцию базы данных:
 ```
 python manage.py migrate
